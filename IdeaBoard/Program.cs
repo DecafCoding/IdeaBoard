@@ -1,4 +1,6 @@
 using IdeaBoard.Components;
+using IdeaBoard.Services;
+using IdeaBoard.Services.Interfaces;
 
 namespace IdeaBoard
 {
@@ -12,6 +14,9 @@ namespace IdeaBoard
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
+
+            // Register theme service
+            builder.Services.AddScoped<IThemeService, ThemeService>();
 
             var app = builder.Build();
 
