@@ -1,0 +1,15 @@
+@page "/board/{id}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<PageTitle>Board</PageTitle>
+
+<h3>Board: @Id</h3>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    // TODO: Implement board detail page (Story B3.5)
+    // This will host the Canvas component
+}
