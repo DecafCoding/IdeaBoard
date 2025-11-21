@@ -1,0 +1,35 @@
+<div class="canvas-item canvas-item--@ItemType"
+     style="@GetItemStyle()">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string ItemType { get; set; } = string.Empty;
+
+    [Parameter]
+    public double X { get; set; }
+
+    [Parameter]
+    public double Y { get; set; }
+
+    [Parameter]
+    public double Width { get; set; }
+
+    [Parameter]
+    public double Height { get; set; }
+
+    [Parameter]
+    public int ZIndex { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string GetItemStyle()
+    {
+        return $"transform: translate({X}px, {Y}px); " +
+               $"width: {Width}px; " +
+               $"height: {Height}px; " +
+               $"z-index: {ZIndex};";
+    }
+}
