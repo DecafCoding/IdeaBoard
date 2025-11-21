@@ -1,0 +1,13 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "Supabase": {
+    "Url": "https://your-project.supabase.co",
+    "AnonKey": "your-anon-key-here",
+    "ServiceKey": "your-service-key-here"
+  }
+}
