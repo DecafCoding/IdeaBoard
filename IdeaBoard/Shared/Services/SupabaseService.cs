@@ -63,13 +63,13 @@ public class SupabaseService
     /// <summary>
     /// Gets a single record by ID.
     /// </summary>
-    public async Task<T?> GetByIdAsync<T>(string table, Guid id)
+    public async Task<T?> GetByIdAsync<T>(string table, Guid id) where T : class
     {
         var response = await _httpClient.GetAsync($"{table}?id=eq.{id}");
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            return default;
+            return null;
         }
 
         if (!response.IsSuccessStatusCode)
@@ -84,7 +84,7 @@ public class SupabaseService
     /// <summary>
     /// Creates a new record in the table.
     /// </summary>
-    public async Task<T> PostAsync<T>(string table, T data)
+    public async Task<T> PostAsync<T>(string table, T data) where T : class
     {
         var response = await _httpClient.PostAsJsonAsync(table, data, _jsonOptions);
 
@@ -101,7 +101,7 @@ public class SupabaseService
     /// <summary>
     /// Updates an existing record.
     /// </summary>
-    public async Task<T> PatchAsync<T>(string table, Guid id, T data)
+    public async Task<T> PatchAsync<T>(string table, Guid id, T data) where T : class
     {
         var response = await _httpClient.PatchAsJsonAsync($"{table}?id=eq.{id}", data, _jsonOptions);
 
