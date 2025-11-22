@@ -1,6 +1,7 @@
 using IdeaBoard.Components;
 using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
+using IdeaBoard.Shared.Services;
 
 namespace IdeaBoard
 {
@@ -18,6 +19,20 @@ namespace IdeaBoard
             // Register theme service
             builder.Services.AddScoped<IThemeService, ThemeService>();
 
+            // Add HTTP client for Supabase
+            builder.Services.AddHttpClient<SupabaseService>();
+
+            // Register services (will be implemented in phases)
+            builder.Services.AddScoped<SupabaseService>();
+            // builder.Services.AddScoped<AuthService>();
+            // builder.Services.AddScoped<BoardService>();
+            // builder.Services.AddScoped<CanvasService>();
+            // builder.Services.AddScoped<NotificationService>();
+
+            // Configure authentication (will be implemented in Phase 1)
+            // builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+            // builder.Services.AddAuthorizationCore();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -34,6 +49,7 @@ namespace IdeaBoard
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
             app.UseAntiforgery();
 
             app.MapStaticAssets();
