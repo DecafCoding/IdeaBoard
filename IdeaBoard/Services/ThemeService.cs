@@ -11,7 +11,6 @@ namespace IdeaBoard.Services
     public class ThemeService : IThemeService, IAsyncDisposable
     {
         private readonly IJSRuntime _jsRuntime;
-        private readonly Lazy<Task<IJSObjectReference>> _moduleTask;
         private string _currentTheme = "auto"; // Cache for pre-rendering
 
         public event Action<string>? ThemeChanged;
@@ -19,8 +18,6 @@ namespace IdeaBoard.Services
         public ThemeService(IJSRuntime jsRuntime)
         {
             _jsRuntime = jsRuntime;
-            _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>(
-                "import", "/js/theme.js").AsTask());
         }
 
         /// <summary>
@@ -37,8 +34,7 @@ namespace IdeaBoard.Services
 
             try
             {
-                var module = await _moduleTask.Value;
-                var theme = await module.InvokeAsync<string>("getTheme");
+                var theme = await _jsRuntime.InvokeAsync<string>("IdeaBoardTheme.getTheme");
                 _currentTheme = theme; // Update cache
                 return theme;
             }
@@ -71,8 +67,7 @@ namespace IdeaBoard.Services
 
             try
             {
-                var module = await _moduleTask.Value;
-                await module.InvokeVoidAsync("setTheme", theme);
+                await _jsRuntime.InvokeVoidAsync("IdeaBoardTheme.setTheme", theme);
                 ThemeChanged?.Invoke(theme);
             }
             catch
@@ -101,18 +96,8 @@ namespace IdeaBoard.Services
 
         public async ValueTask DisposeAsync()
         {
-            if (_moduleTask.IsValueCreated)
-            {
-                try
-                {
-                    var module = await _moduleTask.Value;
-                    await module.DisposeAsync();
-                }
-                catch
-                {
-                    // Ignore disposal errors
-                }
-            }
+            // No module to dispose anymore
+            await Task.CompletedTask;
         }
     }
 }
