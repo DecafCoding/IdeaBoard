@@ -1,6 +1,6 @@
-namespace IdeaBoard.Features.Canvas.Models;
+namespace IdeaBoard.Features.BoardItems.Models;
 
-public class CanvasItem
+public class BoardItem
 {
     public Guid Id { get; set; }
     public Guid BoardId { get; set; }
