@@ -1,4 +1,4 @@
-namespace IdeaBoard.Features.Canvas.Services;
+namespace IdeaBoard.Shared.Services;
 
 /// <summary>
 /// Tracks connection state and unsaved changes for the canvas.
