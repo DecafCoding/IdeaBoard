@@ -264,8 +264,8 @@ public class CanvasStateService : IDisposable
                     var localItem = _items.FirstOrDefault(i => i.Id == updatedEntity.Id);
                     if (localItem != null)
                     {
-                        localItem.UpdatedAt = updatedEntity.UpdatedAt;
-                        localItem.CreatedAt = updatedEntity.CreatedAt;
+                        localItem.UpdatedAt = updatedEntity.UpdatedAt ?? DateTime.Now;
+                        localItem.CreatedAt = updatedEntity.CreatedAt ?? DateTime.Now;
                     }
                 }
 

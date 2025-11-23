@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using IdeaBoard.Shared.Services;
-using IdeaBoard.Shared.DataServices;
+//using IdeaBoard.Shared.DataServices;
 
 namespace IdeaBoard.Client
 {
