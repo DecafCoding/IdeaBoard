@@ -4,7 +4,9 @@ using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.DataServices;
 using IdeaBoard.Shared.Services;
+using IdeaBoard.Shared.Services.Authentication;
 using IdeaBoard.Shared.Services.Supabase;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace IdeaBoard
 {
@@ -32,8 +34,15 @@ namespace IdeaBoard
             // Register other services (will be implemented in phases)
             builder.Services.AddScoped<NotificationService>();
 
-            // Register authentication service
+            // Register authentication services
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ITokenStorage, CookieTokenStorage>();
+            builder.Services.AddScoped<CustomAuthStateProvider>();
+            builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+                provider.GetRequiredService<CustomAuthStateProvider>());
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<TokenRefreshService>();
+            builder.Services.AddAuthorizationCore();
 
             // builder.Services.AddScoped<BoardService>();
 
@@ -46,10 +55,6 @@ namespace IdeaBoard
             builder.Services.AddScoped<ConnectionStateService>();
             builder.Services.AddScoped<CanvasStateService>();
             builder.Services.AddScoped<CanvasInteropService>();
-
-            // Configure authentication (will be implemented in Phase 1)
-            // builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-            // builder.Services.AddAuthorizationCore();
 
             var app = builder.Build();
 
