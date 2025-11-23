@@ -2,6 +2,8 @@ using IdeaBoard.Components;
 using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.Services;
+using IdeaBoard.Shared.DataServices;
+using IdeaBoard.Features.Canvas.Services;
 
 namespace IdeaBoard
 {
@@ -26,8 +28,17 @@ namespace IdeaBoard
             builder.Services.AddScoped<SupabaseService>();
             // builder.Services.AddScoped<AuthService>();
             // builder.Services.AddScoped<BoardService>();
-            // builder.Services.AddScoped<CanvasService>();
             // builder.Services.AddScoped<NotificationService>();
+
+            // Register data services
+            builder.Services.AddScoped<DataEntityMapper>();
+            builder.Services.AddScoped<BoardDataService>();
+            builder.Services.AddScoped<BoardItemDataService>();
+
+            // Register canvas services
+            builder.Services.AddScoped<ConnectionStateService>();
+            builder.Services.AddScoped<CanvasStateService>();
+            builder.Services.AddScoped<CanvasInteropService>();
 
             // Configure authentication (will be implemented in Phase 1)
             // builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();

@@ -1,0 +1,55 @@
+@using IdeaBoard.Features.Canvas.Services
+@inject ConnectionStateService ConnectionStateService
+@inject CanvasStateService CanvasStateService
+@implements IDisposable
+
+@if (!ConnectionStateService.IsOnline)
+{
+    <div class="connection-banner connection-banner-error">
+        <div class="connection-banner-content">
+            <span class="connection-banner-icon">⚠️</span>
+            <span class="connection-banner-message">
+                Connection lost. Changes will be saved when reconnected.
+                @if (CanvasStateService.UnsavedChangesCount > 0)
+                {
+                    <span class="unsaved-count">(@CanvasStateService.UnsavedChangesCount unsaved changes)</span>
+                }
+            </span>
+        </div>
+    </div>
+}
+else if (ConnectionStateService.HasUnsavedChanges)
+{
+    <div class="connection-banner connection-banner-info">
+        <div class="connection-banner-content">
+            <span class="connection-banner-icon">💾</span>
+            <span class="connection-banner-message">
+                Saving changes...
+            </span>
+        </div>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        ConnectionStateService.ConnectionStateChanged += OnConnectionStateChanged;
+        ConnectionStateService.UnsavedChangesStateChanged += OnUnsavedChangesStateChanged;
+    }
+
+    private void OnConnectionStateChanged(bool isOnline)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnUnsavedChangesStateChanged(bool hasUnsavedChanges)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ConnectionStateService.ConnectionStateChanged -= OnConnectionStateChanged;
+        ConnectionStateService.UnsavedChangesStateChanged -= OnUnsavedChangesStateChanged;
+    }
+}

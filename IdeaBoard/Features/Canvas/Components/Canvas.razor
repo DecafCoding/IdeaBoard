@@ -1,0 +1,160 @@
+@using IdeaBoard.Features.BoardItems.Models
+@using IdeaBoard.Features.Canvas.Services
+@inject CanvasStateService CanvasStateService
+@inject CanvasInteropService CanvasInteropService
+@inject ConnectionStateService ConnectionStateService
+@implements IAsyncDisposable
+
+<div class="canvas-wrapper">
+    <ConnectionBanner />
+
+    <div class="canvas-toolbar">
+        <button class="btn btn-primary" @onclick="AddNote">Add Note</button>
+        <button class="btn btn-primary" @onclick="AddTodo">Add To-Do</button>
+        <button class="btn btn-danger" @onclick="DeleteSelected" disabled="@(!HasSelection)">
+            Delete (@CanvasStateService.SelectedItemIds.Count)
+        </button>
+        <button class="btn btn-secondary" @onclick="ClearSelection" disabled="@(!HasSelection)">
+            Clear Selection
+        </button>
+    </div>
+
+    <div class="canvas-container" id="@_canvasId">
+        @foreach (var item in CanvasStateService.Items)
+        {
+            <CanvasItem Item="@item" IsSelected="@IsItemSelected(item.Id)" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid BoardId { get; set; }
+
+    private string _canvasId = "canvas-viewport";
+    private bool _initialized = false;
+
+    private bool HasSelection => CanvasStateService.SelectedItemIds.Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to state changes
+        CanvasStateService.ItemsChanged += OnItemsChanged;
+        CanvasStateService.SelectionChanged += OnSelectionChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            try
+            {
+                // Load items from database
+                await CanvasStateService.LoadItemsAsync(BoardId);
+
+                // Initialize JavaScript canvas
+                await CanvasInteropService.InitializeCanvasAsync(
+                    _canvasId,
+                    BoardId,
+                    CanvasStateService.Items.ToList());
+
+                _initialized = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Canvas initialization failed: {ex.Message}");
+            }
+        }
+    }
+
+    private void OnItemsChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSelectionChanged(List<Guid> selectedIds)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsItemSelected(Guid itemId)
+    {
+        return CanvasStateService.SelectedItemIds.Contains(itemId);
+    }
+
+    private async Task AddNote()
+    {
+        var newItem = new BoardItem
+        {
+            Id = Guid.NewGuid(),
+            BoardId = BoardId,
+            UserId = Guid.NewGuid(), // TODO: Get from auth service
+            ItemType = "note",
+            Position = new ItemPosition { X = 100, Y = 100, ZIndex = 1 },
+            Size = new ItemSize { Width = 200, Height = 150 },
+            Content = new Dictionary<string, object>
+            {
+                { "text", "New note" }
+            },
+            Metadata = new Dictionary<string, object>
+            {
+                { "color", "#fef08a" } // yellow
+            },
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        CanvasStateService.AddItem(newItem);
+        await CanvasInteropService.AddItemAsync(newItem);
+    }
+
+    private async Task AddTodo()
+    {
+        var newItem = new BoardItem
+        {
+            Id = Guid.NewGuid(),
+            BoardId = BoardId,
+            UserId = Guid.NewGuid(), // TODO: Get from auth service
+            ItemType = "todo",
+            Position = new ItemPosition { X = 100, Y = 100, ZIndex = 1 },
+            Size = new ItemSize { Width = 200, Height = 200 },
+            Content = new Dictionary<string, object>
+            {
+                { "title", "New To-Do" },
+                { "items", new List<object>() }
+            },
+            Metadata = new Dictionary<string, object>
+            {
+                { "color", "#e0f2fe" } // blue
+            },
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        CanvasStateService.AddItem(newItem);
+        await CanvasInteropService.AddItemAsync(newItem);
+    }
+
+    private void DeleteSelected()
+    {
+        CanvasStateService.DeleteSelectedItems();
+    }
+
+    private async Task ClearSelection()
+    {
+        await CanvasInteropService.ClearSelectionAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Unsubscribe from events
+        CanvasStateService.ItemsChanged -= OnItemsChanged;
+        CanvasStateService.SelectionChanged -= OnSelectionChanged;
+
+        // Save any pending changes
+        await CanvasStateService.SaveNowAsync();
+
+        // Cleanup JavaScript
+        await CanvasInteropService.DestroyCanvasAsync();
+    }
+}

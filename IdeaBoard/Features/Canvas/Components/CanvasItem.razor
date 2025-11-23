@@ -1,0 +1,158 @@
+@using IdeaBoard.Features.BoardItems.Models
+
+<div class="canvas-item @ItemTypeClass @SelectedClass"
+     id="item-@Item.Id"
+     style="@ItemStyle">
+
+    @switch (Item.ItemType)
+    {
+        case "note":
+            <div class="canvas-item-note">
+                <textarea class="note-content"
+                          @bind="NoteText"
+                          @bind:event="oninput"
+                          placeholder="Type your note..."></textarea>
+            </div>
+            break;
+
+        case "todo":
+            <div class="canvas-item-todo">
+                <input type="text"
+                       class="todo-title"
+                       @bind="TodoTitle"
+                       @bind:event="oninput"
+                       placeholder="To-Do Title" />
+                <div class="todo-items">
+                    @foreach (var todoItem in TodoItems)
+                    {
+                        <div class="todo-item">
+                            <input type="checkbox" />
+                            <span>@todoItem</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            break;
+
+        case "image":
+            <div class="canvas-item-image">
+                @if (ImageUrl != null)
+                {
+                    <img src="@ImageUrl" alt="Canvas image" />
+                }
+                else
+                {
+                    <div class="image-placeholder">Image</div>
+                }
+            </div>
+            break;
+
+        case "link":
+            <div class="canvas-item-link">
+                <a href="@LinkUrl" target="_blank" rel="noopener noreferrer">
+                    <div class="link-preview">
+                        @if (LinkTitle != null)
+                        {
+                            <h3>@LinkTitle</h3>
+                        }
+                        @if (LinkUrl != null)
+                        {
+                            <p class="link-url">@LinkUrl</p>
+                        }
+                    </div>
+                </a>
+            </div>
+            break;
+
+        default:
+            <div class="canvas-item-unknown">
+                <p>Unknown item type: @Item.ItemType</p>
+            </div>
+            break;
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public BoardItem Item { get; set; } = null!;
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    private string ItemTypeClass => $"canvas-item-{Item.ItemType}";
+    private string SelectedClass => IsSelected ? "selected" : "";
+
+    private string ItemStyle
+    {
+        get
+        {
+            var backgroundColor = GetMetadata<string>("color") ?? "#ffffff";
+            return $"left: {Item.Position.X}px; " +
+                   $"top: {Item.Position.Y}px; " +
+                   $"width: {Item.Size.Width}px; " +
+                   $"height: {Item.Size.Height}px; " +
+                   $"z-index: {Item.Position.ZIndex}; " +
+                   $"background-color: {backgroundColor};";
+        }
+    }
+
+    // Note content
+    private string NoteText
+    {
+        get => GetContent<string>("text") ?? "";
+        set => SetContent("text", value);
+    }
+
+    // Todo content
+    private string TodoTitle
+    {
+        get => GetContent<string>("title") ?? "";
+        set => SetContent("title", value);
+    }
+
+    private List<string> TodoItems
+    {
+        get
+        {
+            var items = GetContent<List<object>>("items");
+            return items?.Select(i => i.ToString() ?? "").ToList() ?? new List<string>();
+        }
+    }
+
+    // Image content
+    private string? ImageUrl => GetContent<string>("url");
+
+    // Link content
+    private string? LinkUrl => GetContent<string>("url");
+    private string? LinkTitle => GetContent<string>("title");
+
+    private T? GetContent<T>(string key)
+    {
+        if (Item.Content.TryGetValue(key, out var value))
+        {
+            if (value is T typedValue)
+            {
+                return typedValue;
+            }
+        }
+        return default;
+    }
+
+    private void SetContent(string key, object value)
+    {
+        Item.Content[key] = value;
+        // TODO: Trigger update to CanvasStateService
+    }
+
+    private T? GetMetadata<T>(string key)
+    {
+        if (Item.Metadata.TryGetValue(key, out var value))
+        {
+            if (value is T typedValue)
+            {
+                return typedValue;
+            }
+        }
+        return default;
+    }
+}

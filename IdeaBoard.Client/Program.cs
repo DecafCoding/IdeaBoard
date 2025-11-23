@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using IdeaBoard.Shared.Services;
+using IdeaBoard.Shared.DataServices;
+using IdeaBoard.Features.Canvas.Services;
 
 namespace IdeaBoard.Client
 {
@@ -7,6 +10,22 @@ namespace IdeaBoard.Client
         static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+            // Add HTTP client for Supabase
+            builder.Services.AddHttpClient<SupabaseService>();
+
+            // Register shared services
+            builder.Services.AddScoped<SupabaseService>();
+
+            // Register data services
+            builder.Services.AddScoped<DataEntityMapper>();
+            builder.Services.AddScoped<BoardDataService>();
+            builder.Services.AddScoped<BoardItemDataService>();
+
+            // Register canvas services
+            builder.Services.AddScoped<ConnectionStateService>();
+            builder.Services.AddScoped<CanvasStateService>();
+            builder.Services.AddScoped<CanvasInteropService>();
 
             await builder.Build().RunAsync();
         }
