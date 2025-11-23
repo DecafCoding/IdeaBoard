@@ -37,7 +37,7 @@
 </head>
 
 <body>
-    <Routes />
+    <Routes @rendermode="PageRenderMode" />
 
     <!-- Panzoom.js from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.3/dist/panzoom.min.js"></script>
@@ -47,3 +47,11 @@
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}
