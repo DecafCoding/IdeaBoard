@@ -1,4 +1,6 @@
 @using IdeaBoard.Shared.Models.Canvas
+@using IdeaBoard.Shared.Services
+@inject CanvasStateService CanvasStateService
 
 <div class="canvas-item @ItemTypeClass @SelectedClass"
      id="item-@Item.Id"
@@ -141,7 +143,10 @@
     private void SetContent(string key, object value)
     {
         Item.Content[key] = value;
-        // TODO: Trigger update to CanvasStateService
+
+        // Trigger optimistic update with auto-save
+        var updatedContent = new Dictionary<string, object>(Item.Content);
+        CanvasStateService.UpdateItemContentOptimistic(Item.Id, updatedContent);
     }
 
     private T? GetMetadata<T>(string key)

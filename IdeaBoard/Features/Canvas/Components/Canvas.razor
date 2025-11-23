@@ -17,6 +17,32 @@
         <button class="btn btn-secondary" @onclick="ClearSelection" disabled="@(!HasSelection)">
             Clear Selection
         </button>
+
+        <div class="toolbar-spacer"></div>
+
+        @if (CanvasStateService.UnsavedChangesCount > 0)
+        {
+            <div class="save-status">
+                <span class="save-status-text">Saving...</span>
+            </div>
+        }
+        else
+        {
+            <div class="save-status">
+                <span class="save-status-text save-status-success">All changes saved</span>
+            </div>
+        }
+
+        <button class="btn btn-secondary" @onclick="SaveNow" disabled="@(CanvasStateService.UnsavedChangesCount == 0 || _isSaving)">
+            @if (_isSaving)
+            {
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save Now</span>
+            }
+        </button>
     </div>
 
     <div class="canvas-container" id="@_canvasId">
@@ -25,6 +51,8 @@
             <CanvasItem Item="@item" IsSelected="@IsItemSelected(item.Id)" />
         }
     </div>
+
+    <Toast />
 </div>
 
 @code {
@@ -33,6 +61,7 @@
 
     private string _canvasId = "canvas-viewport";
     private bool _initialized = false;
+    private bool _isSaving = false;
 
     private bool HasSelection => CanvasStateService.SelectedItemIds.Count > 0;
 
@@ -143,6 +172,19 @@
     private async Task ClearSelection()
     {
         await CanvasInteropService.ClearSelectionAsync();
+    }
+
+    private async Task SaveNow()
+    {
+        _isSaving = true;
+        try
+        {
+            await CanvasStateService.SaveNowAsync();
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 
     public async ValueTask DisposeAsync()

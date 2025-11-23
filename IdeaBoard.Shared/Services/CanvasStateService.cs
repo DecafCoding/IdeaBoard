@@ -13,6 +13,8 @@ public class CanvasStateService : IDisposable
     private readonly BoardItemDataService _boardItemDataService;
     private readonly DataEntityMapper _mapper;
     private readonly int _autoSaveDebounceMs;
+    private readonly int _maxRetryAttempts;
+    private readonly int _retryDelayMs;
     private readonly ConnectionStateService _connectionStateService;
 
     private List<BoardItem> _items = new();
@@ -20,6 +22,7 @@ public class CanvasStateService : IDisposable
     private List<Guid> _selectedItemIds = new();
     private Timer? _autoSaveTimer;
     private Guid? _currentBoardId;
+    private int _currentRetryCount = 0;
 
     // Events
     public event Action? ItemsChanged;
@@ -35,6 +38,8 @@ public class CanvasStateService : IDisposable
         _mapper = mapper;
         _connectionStateService = connectionStateService;
         _autoSaveDebounceMs = configuration.GetValue<int>("Canvas:AutoSaveDebounceMs", 1000);
+        _maxRetryAttempts = configuration.GetValue<int>("Canvas:MaxRetryAttempts", 3);
+        _retryDelayMs = configuration.GetValue<int>("Canvas:RetryDelayMs", 1000);
     }
 
     /// <summary>
@@ -127,6 +132,27 @@ public class CanvasStateService : IDisposable
     }
 
     /// <summary>
+    /// Updates an item's size and position optimistically (used during resize operations).
+    /// </summary>
+    public void UpdateItemSizeAndPositionOptimistic(Guid itemId, double width, double height, double x, double y)
+    {
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
+        if (item != null)
+        {
+            item.Size.Width = width;
+            item.Size.Height = height;
+            item.Position.X = x;
+            item.Position.Y = y;
+            item.UpdatedAt = DateTime.UtcNow;
+
+            _dirtyItemIds.Add(itemId);
+
+            ItemsChanged?.Invoke();
+            TriggerAutoSave();
+        }
+    }
+
+    /// <summary>
     /// Updates an item's content optimistically.
     /// </summary>
     public void UpdateItemContentOptimistic(Guid itemId, Dictionary<string, object> content)
@@ -202,6 +228,7 @@ public class CanvasStateService : IDisposable
 
     /// <summary>
     /// Saves all dirty items to the database in a batch.
+    /// Uses timestamp-based conflict resolution (last-write-wins) and retry with exponential backoff.
     /// </summary>
     public async Task BatchSaveAsync()
     {
@@ -214,26 +241,72 @@ public class CanvasStateService : IDisposable
             .Where(i => _dirtyItemIds.Contains(i.Id))
             .ToList();
 
-        try
-        {
-            // Convert to entities
-            var entities = itemsToSave
-                .Select(i => _mapper.MapToBoardItemEntity(i))
-                .ToList();
+        var success = false;
+        var attemptCount = 0;
 
-            // Batch update
-            await _boardItemDataService.UpdateBatchAsync(entities);
-
-            // Clear dirty flags on success
-            _dirtyItemIds.Clear();
-            _connectionStateService.SetConnectionState(true);
-            _connectionStateService.SetHasUnsavedChanges(false);
-        }
-        catch (Exception ex)
+        while (!success && attemptCount <= _maxRetryAttempts)
         {
-            Console.WriteLine($"Auto-save failed: {ex.Message}");
-            _connectionStateService.SetConnectionState(false);
-            // Keep dirty items for retry on next change
+            try
+            {
+                attemptCount++;
+
+                // Convert to entities
+                var entities = itemsToSave
+                    .Select(i => _mapper.MapToBoardItemEntity(i))
+                    .ToList();
+
+                // Batch upsert to Supabase
+                var updatedEntities = await _boardItemDataService.UpdateBatchAsync(entities);
+
+                // Sync server timestamps back to local state (for conflict resolution)
+                foreach (var updatedEntity in updatedEntities)
+                {
+                    var localItem = _items.FirstOrDefault(i => i.Id == updatedEntity.Id);
+                    if (localItem != null)
+                    {
+                        localItem.UpdatedAt = updatedEntity.UpdatedAt;
+                        localItem.CreatedAt = updatedEntity.CreatedAt;
+                    }
+                }
+
+                // Clear dirty flags on success
+                _dirtyItemIds.Clear();
+                _currentRetryCount = 0;
+                _connectionStateService.SetConnectionState(true);
+                _connectionStateService.SetHasUnsavedChanges(false);
+                success = true;
+
+                Console.WriteLine($"Auto-save succeeded on attempt {attemptCount}");
+            }
+            catch (HttpRequestException ex)
+            {
+                // Network error - retry with exponential backoff
+                Console.WriteLine($"Auto-save failed (attempt {attemptCount}/{_maxRetryAttempts + 1}): {ex.Message}");
+
+                if (attemptCount <= _maxRetryAttempts)
+                {
+                    // Exponential backoff: 1s, 2s, 4s
+                    var delay = _retryDelayMs * (int)Math.Pow(2, attemptCount - 1);
+                    Console.WriteLine($"Retrying in {delay}ms...");
+                    await Task.Delay(delay);
+                }
+                else
+                {
+                    // Max retries exceeded
+                    _currentRetryCount = attemptCount;
+                    _connectionStateService.SetConnectionState(false);
+                    Console.WriteLine("Auto-save failed: Max retries exceeded");
+                    // Keep dirty items for next auto-save trigger
+                }
+            }
+            catch (Exception ex)
+            {
+                // Non-network error (validation, etc.) - don't retry
+                Console.WriteLine($"Auto-save failed with non-retryable error: {ex.Message}");
+                _connectionStateService.SetConnectionState(false);
+                // Keep dirty items for manual intervention
+                break;
+            }
         }
     }
 

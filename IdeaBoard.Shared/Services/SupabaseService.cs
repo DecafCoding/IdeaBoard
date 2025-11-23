@@ -134,4 +134,36 @@ public class SupabaseService
 
         return true;
     }
+
+    /// <summary>
+    /// Upserts (insert or update) multiple records in a single batch operation.
+    /// Uses Supabase's bulk upsert with resolution=merge-duplicates.
+    /// </summary>
+    public async Task<List<T>> UpsertBatchAsync<T>(string table, List<T> data) where T : class
+    {
+        if (data == null || data.Count == 0)
+        {
+            return new List<T>();
+        }
+
+        // Create request message with upsert header
+        var request = new HttpRequestMessage(HttpMethod.Post, table)
+        {
+            Content = JsonContent.Create(data, options: _jsonOptions)
+        };
+
+        // Add upsert preference header (merge duplicates on conflict)
+        request.Headers.Add("Prefer", "resolution=merge-duplicates,return=representation");
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Supabase UPSERT failed: {response.StatusCode} - {error}");
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<List<T>>(_jsonOptions);
+        return result ?? new List<T>();
+    }
 }

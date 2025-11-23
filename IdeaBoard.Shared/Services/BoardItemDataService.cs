@@ -20,17 +20,25 @@ public class BoardItemDataService : BaseDataService<BoardItemEntity>
     }
 
     /// <summary>
-    /// Batch update multiple items (useful for canvas pan/zoom operations).
+    /// Batch update/insert multiple items using Supabase bulk upsert.
+    /// Updates timestamps and returns server versions with updated timestamps.
     /// </summary>
     public async Task<List<BoardItemEntity>> UpdateBatchAsync(List<BoardItemEntity> items)
     {
-        var updatedItems = new List<BoardItemEntity>();
+        if (items == null || items.Count == 0)
+        {
+            return new List<BoardItemEntity>();
+        }
 
+        // Update all timestamps before sending
+        var now = DateTime.UtcNow;
         foreach (var item in items)
         {
-            var updated = await UpdateAsync(item.Id, item);
-            updatedItems.Add(updated);
+            item.UpdatedAt = now;
         }
+
+        // Use bulk upsert operation
+        var updatedItems = await SupabaseService.UpsertBatchAsync(TableName, items);
 
         return updatedItems;
     }
