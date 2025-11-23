@@ -1,10 +1,157 @@
 @page "/register"
+@using IdeaBoard.Features.Authentication.Models
+@using IdeaBoard.Features.Authentication.Services
 @rendermode InteractiveServer
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Register - IdeaBoard</PageTitle>
 
-<h3>Register</h3>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">Create Account</h3>
+
+                    @if (!string.IsNullOrEmpty(_successMessage))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @_successMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @_errorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="@_model" OnValidSubmit="@HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email"
+                                       class="form-control"
+                                       @bind-Value="_model.Email"
+                                       placeholder="you@example.com"
+                                       disabled="@_isLoading" />
+                            <ValidationMessage For="@(() => _model.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input id="password"
+                                       type="@(_showPassword ? "text" : "password")"
+                                       class="form-control"
+                                       @bind="_model.Password"
+                                       placeholder="Minimum 8 characters"
+                                       disabled="@_isLoading" />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="TogglePasswordVisibility"
+                                        disabled="@_isLoading">
+                                    <i class="bi @(_showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                </button>
+                            </div>
+                            <ValidationMessage For="@(() => _model.Password)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <input id="confirmPassword"
+                                       type="@(_showConfirmPassword ? "text" : "password")"
+                                       class="form-control"
+                                       @bind="_model.ConfirmPassword"
+                                       placeholder="Re-enter your password"
+                                       disabled="@_isLoading" />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="ToggleConfirmPasswordVisibility"
+                                        disabled="@_isLoading">
+                                    <i class="bi @(_showConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                </button>
+                            </div>
+                            <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary" disabled="@_isLoading">
+                                @if (_isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Creating account...</span>
+                                }
+                                else
+                                {
+                                    <span>Register</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            Already have an account?
+                            <a href="/login">Sign in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    // TODO: Implement registration functionality (Story A2.1)
+    private RegisterRequest _model = new();
+    private bool _isLoading;
+    private bool _showPassword;
+    private bool _showConfirmPassword;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private void ToggleConfirmPasswordVisibility()
+    {
+        _showConfirmPassword = !_showConfirmPassword;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            await AuthService.RegisterAsync(_model);
+
+            _successMessage = "Account created successfully! Redirecting to login...";
+            StateHasChanged();
+
+            // Wait 2-3 seconds before redirecting
+            await Task.Delay(2500);
+            Navigation.NavigateTo("/login");
+        }
+        catch (AuthenticationException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            _errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
 }
