@@ -3,6 +3,7 @@ using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.DataServices;
 using IdeaBoard.Shared.Services;
+using IdeaBoard.Shared.Services.Supabase;
 
 namespace IdeaBoard
 {
@@ -20,11 +21,14 @@ namespace IdeaBoard
             // Register theme service
             builder.Services.AddScoped<IThemeService, ThemeService>();
 
-            // Add HTTP client for Supabase
-            builder.Services.AddHttpClient<SupabaseService>();
+            // Register Supabase HTTP Client as Singleton (base configuration)
+            builder.Services.AddHttpClient<SupabaseHttpClient>();
+            builder.Services.AddSingleton<SupabaseHttpClient>();
 
-            // Register services (will be implemented in phases)
+            // Register Supabase Service as Scoped (per-request auth token management)
             builder.Services.AddScoped<SupabaseService>();
+
+            // Register other services (will be implemented in phases)
             builder.Services.AddScoped<NotificationService>();
             // builder.Services.AddScoped<AuthService>();
             // builder.Services.AddScoped<BoardService>();

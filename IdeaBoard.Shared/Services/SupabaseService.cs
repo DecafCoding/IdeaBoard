@@ -1,27 +1,31 @@
-using Microsoft.Extensions.Configuration;
+using IdeaBoard.Shared.Services.Supabase;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace IdeaBoard.Shared.Services;
 
+/// <summary>
+/// Provides Supabase REST API operations with authentication support.
+/// Scoped service that manages per-request auth tokens.
+/// </summary>
 public class SupabaseService
 {
     private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
     private readonly JsonSerializerOptions _jsonOptions;
     private string? _authToken;
 
-    public SupabaseService(HttpClient httpClient, IConfiguration configuration)
+    public SupabaseService(SupabaseHttpClient supabaseHttpClient)
     {
-        _httpClient = httpClient;
-        _configuration = configuration;
+        _httpClient = supabaseHttpClient.Client;
 
-        var supabaseUrl = _configuration["Supabase:Url"];
-        var supabaseKey = _configuration["Supabase:AnonKey"];
+        // Configure for Supabase REST API
+        _httpClient.BaseAddress = new Uri($"{supabaseHttpClient.SupabaseUrl}/rest/v1/");
 
-        _httpClient.BaseAddress = new Uri($"{supabaseUrl}/rest/v1/");
-        _httpClient.DefaultRequestHeaders.Add("apikey", supabaseKey);
-        _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+        // Add Prefer header for returning data after mutations
+        if (!_httpClient.DefaultRequestHeaders.Contains("Prefer"))
+        {
+            _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
+        }
 
         _jsonOptions = new JsonSerializerOptions
         {
