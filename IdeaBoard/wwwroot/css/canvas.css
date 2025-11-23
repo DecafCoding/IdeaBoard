@@ -1,11 +1,32 @@
 /* Canvas-specific styles */
 
-.canvas-container {
+/* Canvas wrapper and layout */
+.canvas-wrapper {
     width: 100%;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.canvas-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background-color: white;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-container {
+    flex: 1;
     overflow: hidden;
     position: relative;
-    background-color: var(--color-bg-secondary);
+    background-color: #f5f5f5;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
 .canvas-viewport {
@@ -14,29 +35,181 @@
     position: relative;
 }
 
+/* Canvas items */
 .canvas-item {
     position: absolute;
     background-color: white;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     cursor: move;
-    transition: box-shadow var(--transition);
+    transition: box-shadow 150ms ease;
+    padding: 12px;
+    overflow: hidden;
 }
 
 .canvas-item:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .canvas-item.dragging {
-    box-shadow: var(--shadow-lg);
-    opacity: 0.9;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    opacity: 0.95;
     cursor: grabbing;
+    z-index: 1000 !important;
 }
 
 .canvas-item.selected {
-    border-color: var(--color-primary);
+    border-color: #3b82f6;
     border-width: 2px;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* TODO: Add more canvas styles */
+/* Note item */
+.canvas-item-note .note-content {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 14px;
+    font-family: inherit;
+    background: transparent;
+}
+
+/* Todo item */
+.canvas-item-todo .todo-title {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    background: transparent;
+}
+
+.canvas-item-todo .todo-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.canvas-item-todo .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Image item */
+.canvas-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.canvas-item-image .image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+    color: #9ca3af;
+}
+
+/* Link item */
+.canvas-item-link a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.canvas-item-link .link-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.canvas-item-link h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.canvas-item-link .link-url {
+    margin: 0;
+    font-size: 12px;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Connection banner */
+.connection-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.connection-banner-error {
+    background-color: #fef2f2;
+    border-bottom: 2px solid #ef4444;
+    color: #991b1b;
+}
+
+.connection-banner-info {
+    background-color: #eff6ff;
+    border-bottom: 2px solid #3b82f6;
+    color: #1e40af;
+}
+
+.connection-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.connection-banner-icon {
+    font-size: 18px;
+}
+
+.connection-banner-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.unsaved-count {
+    font-weight: 600;
+}
+
+/* Loading and error states */
+.board-detail-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner,
+.error-message {
+    text-align: center;
+}
+
+.error-message {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}

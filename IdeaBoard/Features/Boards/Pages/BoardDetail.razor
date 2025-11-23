@@ -1,15 +1,71 @@
 @page "/board/{id}"
+@using IdeaBoard.Features.Canvas.Components
 @attribute [Authorize]
-@rendermode InteractiveServer
+@rendermode InteractiveWebAssembly
 
-<PageTitle>Board</PageTitle>
+<PageTitle>Board - @BoardName</PageTitle>
 
-<h3>Board: @Id</h3>
+<div class="board-detail-container">
+    @if (_loading)
+    {
+        <div class="loading-spinner">
+            <p>Loading board...</p>
+        </div>
+    }
+    else if (_error != null)
+    {
+        <div class="error-message">
+            <p>Error loading board: @_error</p>
+            <button class="btn btn-primary" @onclick="LoadBoard">Retry</button>
+        </div>
+    }
+    else if (_boardId.HasValue)
+    {
+        <Canvas BoardId="@_boardId.Value" />
+    }
+</div>
 
 @code {
     [Parameter]
     public string Id { get; set; } = string.Empty;
 
-    // TODO: Implement board detail page (Story B3.5)
-    // This will host the Canvas component
+    private Guid? _boardId;
+    private string BoardName { get; set; } = "Untitled Board";
+    private bool _loading = true;
+    private string? _error = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBoard();
+    }
+
+    private async Task LoadBoard()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            // Parse board ID
+            if (Guid.TryParse(Id, out var boardId))
+            {
+                _boardId = boardId;
+                // TODO: Load board metadata (name, etc.) from BoardService
+                // For now, just use the ID
+                BoardName = $"Board {_boardId.Value.ToString().Substring(0, 8)}";
+            }
+            else
+            {
+                _error = "Invalid board ID";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
 }
