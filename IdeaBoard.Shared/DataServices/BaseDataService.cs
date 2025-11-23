@@ -2,7 +2,7 @@ using System.Reflection;
 using IdeaBoard.Shared.DataEntities;
 using IdeaBoard.Shared.Services;
 
-namespace IdeaBoard.Shared.Services;
+namespace IdeaBoard.Shared.DataServices;
 
 public abstract class BaseDataService<TEntity> where TEntity : class
 {

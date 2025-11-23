@@ -1,5 +1,5 @@
+using IdeaBoard.Shared.DataServices;
 using IdeaBoard.Shared.Models.Canvas;
-using IdeaBoard.Shared.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace IdeaBoard.Shared.Services;

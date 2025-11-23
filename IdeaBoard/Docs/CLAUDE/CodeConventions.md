@@ -3,7 +3,7 @@
 ## Project Organization
 - Features are organized by vertical slice (loose Vertical Slice Architecture)
 - Each feature has its own Pages, Components, Services, and Models
-- Shared components and services go in the Shared/ folder
+- Shared components and services go in the Shared Project
 
 ## File Naming
 - Use PascalCase for C# files: `BoardService.cs`
@@ -29,3 +29,6 @@
 - Separate concerns: UI logic vs business logic
 - Use services for data access and business logic
 - Keep components focused on presentation
+
+## Github Repo Conventions
+- Branch Naming: claude/{usecase name}-{SESSION_ID}
