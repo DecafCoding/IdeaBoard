@@ -1,10 +1,130 @@
 @page "/login"
+@using IdeaBoard.Features.Authentication.Models
+@using IdeaBoard.Features.Authentication.Services
 @rendermode InteractiveServer
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Login - IdeaBoard</PageTitle>
 
-<h3>Login</h3>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">Sign In</h3>
+
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @_errorMessage
+                        </div>
+                    }
+
+                    <EditForm Model="@_model" OnValidSubmit="@HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <InputText id="email"
+                                       class="form-control"
+                                       @bind-Value="_model.Email"
+                                       placeholder="you@example.com"
+                                       disabled="@_isLoading" />
+                            <ValidationMessage For="@(() => _model.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input id="password"
+                                       type="@(_showPassword ? "text" : "password")"
+                                       class="form-control"
+                                       @bind="_model.Password"
+                                       placeholder="Enter your password"
+                                       disabled="@_isLoading" />
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="TogglePasswordVisibility"
+                                        disabled="@_isLoading">
+                                    <i class="bi @(_showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                                </button>
+                            </div>
+                            <ValidationMessage For="@(() => _model.Password)" />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="rememberMe"
+                                          class="form-check-input"
+                                          @bind-Value="_rememberMe"
+                                          disabled="@_isLoading" />
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me (30 days)
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary" disabled="@_isLoading">
+                                @if (_isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Signing in...</span>
+                                }
+                                else
+                                {
+                                    <span>Login</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            Don't have an account?
+                            <a href="/register">Create one</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    // TODO: Implement login functionality (Story A2.2)
+    private LoginRequest _model = new();
+    private bool _isLoading;
+    private bool _showPassword;
+    private bool _rememberMe = true; // Default checked
+    private string? _errorMessage;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            await AuthService.LoginAsync(_model, _rememberMe);
+
+            // Redirect to boards on success
+            Navigation.NavigateTo("/boards");
+        }
+        catch (AuthenticationException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            _errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
 }
