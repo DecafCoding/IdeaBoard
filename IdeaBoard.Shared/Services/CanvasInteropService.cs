@@ -1,7 +1,7 @@
 using IdeaBoard.Features.BoardItems.Models;
 using Microsoft.JSInterop;
 
-namespace IdeaBoard.Features.Canvas.Services;
+namespace IdeaBoard.Shared.Services;
 
 /// <summary>
 /// JSInterop bridge between JavaScript canvas and Blazor state management.

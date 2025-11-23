@@ -3,7 +3,6 @@ using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.Services;
 using IdeaBoard.Shared.DataServices;
-using IdeaBoard.Features.Canvas.Services;
 
 namespace IdeaBoard
 {

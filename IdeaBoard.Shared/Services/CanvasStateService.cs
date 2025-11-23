@@ -2,7 +2,7 @@ using IdeaBoard.Features.BoardItems.Models;
 using IdeaBoard.Shared.DataServices;
 using Microsoft.Extensions.Configuration;
 
-namespace IdeaBoard.Features.Canvas.Services;
+namespace IdeaBoard.Shared.Services;
 
 /// <summary>
 /// Manages canvas state with optimistic updates and auto-save functionality.
