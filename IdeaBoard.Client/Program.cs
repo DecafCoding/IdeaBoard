@@ -15,6 +15,7 @@ namespace IdeaBoard.Client
 
             // Register shared services
             builder.Services.AddScoped<SupabaseService>();
+            builder.Services.AddScoped<NotificationService>();
 
             // Register data services
             builder.Services.AddScoped<DataEntityMapper>();

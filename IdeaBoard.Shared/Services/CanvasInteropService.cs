@@ -121,6 +121,19 @@ public class CanvasInteropService : IAsyncDisposable
     }
 
     /// <summary>
+    /// Called by JavaScript when an item resize operation ends.
+    /// </summary>
+    [JSInvokable]
+    public void OnItemResized(string itemId, double width, double height, double x, double y)
+    {
+        if (Guid.TryParse(itemId, out var id))
+        {
+            // Update both size and position (position may change during resize from corners/edges)
+            _canvasStateService.UpdateItemSizeAndPositionOptimistic(id, width, height, x, y);
+        }
+    }
+
+    /// <summary>
     /// Called by JavaScript when the selection changes.
     /// </summary>
     [JSInvokable]

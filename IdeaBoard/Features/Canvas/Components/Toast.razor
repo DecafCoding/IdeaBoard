@@ -1,0 +1,51 @@
+@using IdeaBoard.Shared.Services
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<div class="toast-container">
+    @foreach (var notification in NotificationService.Notifications)
+    {
+        <div class="toast toast-@notification.Type.ToString().ToLower()" @key="notification.Id">
+            <div class="toast-content">
+                <div class="toast-icon">
+                    @switch (notification.Type)
+                    {
+                        case NotificationType.Success:
+                            <span>✓</span>
+                            break;
+                        case NotificationType.Error:
+                            <span>✕</span>
+                            break;
+                        case NotificationType.Warning:
+                            <span>⚠</span>
+                            break;
+                        case NotificationType.Info:
+                            <span>ⓘ</span>
+                            break;
+                    }
+                </div>
+                <div class="toast-message">@notification.Message</div>
+                <button class="toast-close" @onclick="() => NotificationService.Remove(notification.Id)">
+                    ✕
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        NotificationService.NotificationsChanged += OnNotificationsChanged;
+    }
+
+    private void OnNotificationsChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NotificationService.NotificationsChanged -= OnNotificationsChanged;
+    }
+}

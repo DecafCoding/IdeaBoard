@@ -11,6 +11,11 @@ let draggedItem = null;
 let dragOffset = { x: 0, y: 0 };
 let isDragging = false;
 
+// Resize state
+let resizedItem = null;
+let resizeHandle = null;
+let isResizing = false;
+
 // Selection state
 let selectedItemIds = new Set();
 
@@ -70,8 +75,32 @@ export function addItem(item) {
     const itemElement = document.getElementById(`item-${item.id}`);
     if (itemElement) {
         enableItemDrag(itemElement, item.id);
+        addResizeHandles(itemElement, item.id);
         itemElements.set(item.id, itemElement);
     }
+}
+
+/**
+ * Add resize handles to an item
+ */
+function addResizeHandles(itemElement, itemId) {
+    // Remove existing handles if any
+    const existingHandles = itemElement.querySelectorAll('.resize-handle');
+    existingHandles.forEach(handle => handle.remove());
+
+    // Create 8 resize handles (corners + edges)
+    const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+    handles.forEach(position => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle resize-handle-${position}`;
+        handle.dataset.position = position;
+        handle.dataset.itemId = itemId;
+
+        // Prevent drag when grabbing resize handle
+        handle.addEventListener('mousedown', (e) => handleResizeMouseDown(e, itemElement, itemId, position));
+
+        itemElement.appendChild(handle);
+    });
 }
 
 /**
@@ -362,6 +391,146 @@ function restoreViewport() {
     } catch (e) {
         console.warn('Failed to restore viewport state:', e);
     }
+}
+
+/**
+ * Handle resize mousedown
+ */
+function handleResizeMouseDown(e, itemElement, itemId, position) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    resizedItem = {
+        id: itemId,
+        element: itemElement,
+        position: position,
+        startX: e.clientX,
+        startY: e.clientY,
+        initialWidth: itemElement.offsetWidth,
+        initialHeight: itemElement.offsetHeight,
+        initialLeft: parseFloat(itemElement.style.left) || 0,
+        initialTop: parseFloat(itemElement.style.top) || 0
+    };
+
+    isResizing = false; // Only set to true after minimum movement
+
+    // Disable panzoom during resize
+    if (panzoomInstance) {
+        panzoomInstance.setOptions({ disablePan: true });
+    }
+
+    // Add resizing class
+    itemElement.classList.add('resizing');
+
+    // Add global mouse handlers
+    document.addEventListener('mousemove', handleResizeMouseMove);
+    document.addEventListener('mouseup', handleResizeMouseUp);
+}
+
+/**
+ * Handle resize mousemove
+ */
+function handleResizeMouseMove(e) {
+    if (!resizedItem) return;
+
+    const deltaX = e.clientX - resizedItem.startX;
+    const deltaY = e.clientY - resizedItem.startY;
+
+    // Check if minimum resize distance reached
+    if (!isResizing && (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3)) {
+        isResizing = true;
+    }
+
+    if (isResizing) {
+        // Apply pan/zoom scale to movement
+        const scale = panzoomInstance ? panzoomInstance.getScale() : 1;
+        const scaledDeltaX = deltaX / scale;
+        const scaledDeltaY = deltaY / scale;
+
+        let newWidth = resizedItem.initialWidth;
+        let newHeight = resizedItem.initialHeight;
+        let newLeft = resizedItem.initialLeft;
+        let newTop = resizedItem.initialTop;
+
+        // Calculate new dimensions based on handle position
+        switch (resizedItem.position) {
+            case 'nw':
+                newWidth = Math.max(100, resizedItem.initialWidth - scaledDeltaX);
+                newHeight = Math.max(100, resizedItem.initialHeight - scaledDeltaY);
+                newLeft = resizedItem.initialLeft + (resizedItem.initialWidth - newWidth);
+                newTop = resizedItem.initialTop + (resizedItem.initialHeight - newHeight);
+                break;
+            case 'n':
+                newHeight = Math.max(100, resizedItem.initialHeight - scaledDeltaY);
+                newTop = resizedItem.initialTop + (resizedItem.initialHeight - newHeight);
+                break;
+            case 'ne':
+                newWidth = Math.max(100, resizedItem.initialWidth + scaledDeltaX);
+                newHeight = Math.max(100, resizedItem.initialHeight - scaledDeltaY);
+                newTop = resizedItem.initialTop + (resizedItem.initialHeight - newHeight);
+                break;
+            case 'e':
+                newWidth = Math.max(100, resizedItem.initialWidth + scaledDeltaX);
+                break;
+            case 'se':
+                newWidth = Math.max(100, resizedItem.initialWidth + scaledDeltaX);
+                newHeight = Math.max(100, resizedItem.initialHeight + scaledDeltaY);
+                break;
+            case 's':
+                newHeight = Math.max(100, resizedItem.initialHeight + scaledDeltaY);
+                break;
+            case 'sw':
+                newWidth = Math.max(100, resizedItem.initialWidth - scaledDeltaX);
+                newHeight = Math.max(100, resizedItem.initialHeight + scaledDeltaY);
+                newLeft = resizedItem.initialLeft + (resizedItem.initialWidth - newWidth);
+                break;
+            case 'w':
+                newWidth = Math.max(100, resizedItem.initialWidth - scaledDeltaX);
+                newLeft = resizedItem.initialLeft + (resizedItem.initialWidth - newWidth);
+                break;
+        }
+
+        // Apply new dimensions
+        resizedItem.element.style.width = `${newWidth}px`;
+        resizedItem.element.style.height = `${newHeight}px`;
+        resizedItem.element.style.left = `${newLeft}px`;
+        resizedItem.element.style.top = `${newTop}px`;
+    }
+}
+
+/**
+ * Handle resize mouseup
+ */
+function handleResizeMouseUp(e) {
+    if (!resizedItem) return;
+
+    // Remove global handlers
+    document.removeEventListener('mousemove', handleResizeMouseMove);
+    document.removeEventListener('mouseup', handleResizeMouseUp);
+
+    // Re-enable panzoom
+    if (panzoomInstance) {
+        panzoomInstance.setOptions({ disablePan: false });
+    }
+
+    // Remove resizing class
+    resizedItem.element.classList.remove('resizing');
+
+    // Only notify if actually resized
+    if (isResizing) {
+        const finalWidth = resizedItem.element.offsetWidth;
+        const finalHeight = resizedItem.element.offsetHeight;
+        const finalLeft = parseFloat(resizedItem.element.style.left) || 0;
+        const finalTop = parseFloat(resizedItem.element.style.top) || 0;
+
+        // Notify Blazor of size and position change
+        if (dotnetHelper) {
+            dotnetHelper.invokeMethodAsync('OnItemResized', resizedItem.id, finalWidth, finalHeight, finalLeft, finalTop);
+        }
+    }
+
+    resizedItem = null;
+    isResizing = false;
 }
 
 /**

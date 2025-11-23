@@ -25,9 +25,9 @@ namespace IdeaBoard
 
             // Register services (will be implemented in phases)
             builder.Services.AddScoped<SupabaseService>();
+            builder.Services.AddScoped<NotificationService>();
             // builder.Services.AddScoped<AuthService>();
             // builder.Services.AddScoped<BoardService>();
-            // builder.Services.AddScoped<NotificationService>();
 
             // Register data services
             builder.Services.AddScoped<DataEntityMapper>();
