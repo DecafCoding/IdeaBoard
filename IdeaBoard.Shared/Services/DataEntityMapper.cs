@@ -1,9 +1,9 @@
 using System.Text.Json;
-using IdeaBoard.Features.Boards.Models;
-using IdeaBoard.Features.BoardItems.Models;
+using IdeaBoard.Shared.Models.Board;
+using IdeaBoard.Shared.Models.Canvas;
 using IdeaBoard.Shared.DataEntities;
 
-namespace IdeaBoard.Shared.DataServices;
+namespace IdeaBoard.Shared.Services;
 
 public class DataEntityMapper
 {

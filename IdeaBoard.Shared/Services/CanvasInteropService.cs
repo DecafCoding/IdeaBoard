@@ -1,4 +1,4 @@
-using IdeaBoard.Features.BoardItems.Models;
+using IdeaBoard.Shared.Models.Canvas;
 using Microsoft.JSInterop;
 
 namespace IdeaBoard.Shared.Services;

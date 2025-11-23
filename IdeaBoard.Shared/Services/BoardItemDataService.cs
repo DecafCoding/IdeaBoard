@@ -1,7 +1,7 @@
 using IdeaBoard.Shared.DataEntities;
 using IdeaBoard.Shared.Services;
 
-namespace IdeaBoard.Shared.DataServices;
+namespace IdeaBoard.Shared.Services;
 
 public class BoardItemDataService : BaseDataService<BoardItemEntity>
 {
