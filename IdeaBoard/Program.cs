@@ -2,7 +2,7 @@ using IdeaBoard.Components;
 using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.Services;
-using IdeaBoard.Shared.DataServices;
+using IdeaBoard.Shared.Services;
 
 namespace IdeaBoard
 {
