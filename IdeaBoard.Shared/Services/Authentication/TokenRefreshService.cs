@@ -1,6 +1,4 @@
-using IdeaBoard.Shared.Services.Authentication;
-
-namespace IdeaBoard.Features.Authentication.Services;
+namespace IdeaBoard.Shared.Services.Authentication;
 
 /// <summary>
 /// Background service that proactively refreshes access tokens before they expire.

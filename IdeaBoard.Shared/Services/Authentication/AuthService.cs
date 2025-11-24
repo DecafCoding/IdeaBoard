@@ -1,10 +1,9 @@
-using IdeaBoard.Features.Authentication.Models;
-using IdeaBoard.Shared.Services.Authentication;
+using IdeaBoard.Shared.Models.Authentication;
 using IdeaBoard.Shared.Services.Supabase;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace IdeaBoard.Features.Authentication.Services;
+namespace IdeaBoard.Shared.Services.Authentication;
 
 /// <summary>
 /// Implementation of authentication service using Supabase Auth API.

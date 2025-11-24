@@ -4,7 +4,6 @@ using IdeaBoard.Shared.Services;
 using IdeaBoard.Shared.DataServices;
 using IdeaBoard.Shared.Services.Authentication;
 using IdeaBoard.Client.Services;
-using IdeaBoard.Features.Authentication.Services;
 
 namespace IdeaBoard.Client
 {

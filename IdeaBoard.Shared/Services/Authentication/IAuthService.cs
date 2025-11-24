@@ -1,6 +1,6 @@
-using IdeaBoard.Features.Authentication.Models;
+using IdeaBoard.Shared.Models.Authentication;
 
-namespace IdeaBoard.Features.Authentication.Services;
+namespace IdeaBoard.Shared.Services.Authentication;
 
 /// <summary>
 /// Service for authentication operations with Supabase Auth.

@@ -1,9 +1,8 @@
-using IdeaBoard.Shared.Services.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace IdeaBoard.Features.Authentication.Services;
+namespace IdeaBoard.Shared.Services.Authentication;
 
 /// <summary>
 /// Custom authentication state provider that uses JWT tokens from Supabase.
