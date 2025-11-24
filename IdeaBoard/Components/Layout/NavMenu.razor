@@ -4,9 +4,24 @@
             <i class="bi bi-house-door"></i>
             <span>Home</span>
         </NavLink>
-        <NavLink class="nav-link" href="/boards">
-            <i class="bi bi-kanban"></i>
-            <span>Boards</span>
-        </NavLink>
+
+        <AuthorizeView>
+            <Authorized>
+                <NavLink class="nav-link" href="/boards">
+                    <i class="bi bi-kanban"></i>
+                    <span>Boards</span>
+                </NavLink>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink class="nav-link" href="/login">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Login</span>
+                </NavLink>
+                <NavLink class="nav-link" href="/register">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Register</span>
+                </NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>

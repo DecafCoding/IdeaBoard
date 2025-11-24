@@ -24,16 +24,6 @@ namespace IdeaBoard
             // Register theme service
             builder.Services.AddScoped<IThemeService, ThemeService>();
 
-            // Register Supabase HTTP Client as Singleton (base configuration)
-            builder.Services.AddHttpClient<SupabaseHttpClient>();
-            builder.Services.AddSingleton<SupabaseHttpClient>();
-
-            // Register Supabase Service as Scoped (per-request auth token management)
-            builder.Services.AddScoped<SupabaseService>();
-
-            // Register other services (will be implemented in phases)
-            builder.Services.AddScoped<NotificationService>();
-
             // Register authentication services
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ITokenStorage, CookieTokenStorage>();
@@ -42,7 +32,20 @@ namespace IdeaBoard
                 provider.GetRequiredService<CustomAuthStateProvider>());
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<TokenRefreshService>();
+            builder.Services.AddScoped<AuthSyncService>();
             builder.Services.AddAuthorizationCore();
+
+            // Register Supabase HTTP Client with AuthHeaderHandler
+            builder.Services.AddTransient<AuthHeaderHandler>();
+            builder.Services.AddHttpClient<SupabaseHttpClient>()
+                .AddHttpMessageHandler<AuthHeaderHandler>();
+            builder.Services.AddSingleton<SupabaseHttpClient>();
+
+            // Register Supabase Service as Scoped (per-request auth token management)
+            builder.Services.AddScoped<SupabaseService>();
+
+            // Register other services (will be implemented in phases)
+            builder.Services.AddScoped<NotificationService>();
 
             // builder.Services.AddScoped<BoardService>();
 
