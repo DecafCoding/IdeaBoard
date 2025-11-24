@@ -199,5 +199,27 @@ public class AuthService : IAuthService
         }
     }
 
-    // TODO: Implement LogoutAsync for Story A2.3
+    /// <summary>
+    /// Logs out the current user by clearing stored tokens and authentication state.
+    /// </summary>
+    public async Task LogoutAsync()
+    {
+        try
+        {
+            // Clear stored tokens
+            await _tokenStorage.ClearTokensAsync();
+
+            // Notify authentication state has changed
+            _authStateProvider.NotifyAuthStateChanged();
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't throw - logout should always succeed from client perspective
+            // Even if token clearing fails, user should be logged out
+            Console.WriteLine($"Error during logout: {ex.Message}");
+
+            // Still notify auth state changed to update UI
+            _authStateProvider.NotifyAuthStateChanged();
+        }
+    }
 }

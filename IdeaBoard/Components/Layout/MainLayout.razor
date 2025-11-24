@@ -10,15 +10,41 @@
             </button>
             <a class="navbar-brand" href="/">IdeaBoard</a>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">
-                        <i class="bi bi-gear-fill"></i> Settings
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <ThemeSelector />
-                    </ul>
-                </li>
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> @context.User.Identity?.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">@context.User.Identity?.Name</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <ThemeSelector />
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item" @onclick="HandleLogout">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="bi bi-gear-fill"></i> Settings
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <ThemeSelector />
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+                                <li><a class="dropdown-item" href="/register"><i class="bi bi-person-plus"></i> Register</a></li>
+                            </ul>
+                        </li>
+                    </NotAuthorized>
+                </AuthorizeView>
             </ul>
         </div>
     </nav>
@@ -54,3 +80,28 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    [Inject]
+    private IAuthService AuthService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    [Inject]
+    private AuthSyncService AuthSyncService { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AuthSyncService.InitializeAsync();
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

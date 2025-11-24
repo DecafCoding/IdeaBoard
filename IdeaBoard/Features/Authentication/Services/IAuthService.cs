@@ -31,5 +31,9 @@ public interface IAuthService
     /// <exception cref="AuthenticationException">Thrown when token refresh fails.</exception>
     Task<AuthResponse> RefreshTokenAsync();
 
-    // TODO: Add LogoutAsync for Story A2.3
+    /// <summary>
+    /// Logs out the current user by clearing stored tokens and authentication state.
+    /// </summary>
+    /// <returns>Task representing the asynchronous operation.</returns>
+    Task LogoutAsync();
 }
