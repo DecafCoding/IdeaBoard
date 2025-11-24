@@ -1,6 +1,6 @@
 using Microsoft.JSInterop;
 
-namespace IdeaBoard.Features.Authentication.Services;
+namespace IdeaBoard.Shared.Services.Authentication;
 
 /// <summary>
 /// Service for synchronizing authentication state across browser tabs.

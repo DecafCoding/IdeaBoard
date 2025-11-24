@@ -1,4 +1,4 @@
-namespace IdeaBoard.Features.Authentication.Models;
+namespace IdeaBoard.Shared.Models.Authentication;
 
 /// <summary>
 /// Exception thrown when authentication operations fail.

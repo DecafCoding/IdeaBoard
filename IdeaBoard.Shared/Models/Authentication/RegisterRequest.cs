@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace IdeaBoard.Features.Authentication.Models;
+namespace IdeaBoard.Shared.Models.Authentication;
 
-public class LoginRequest
+public class RegisterRequest
 {
     [Required]
     [EmailAddress]
@@ -11,4 +11,8 @@ public class LoginRequest
     [Required]
     [MinLength(8)]
     public string Password { get; set; } = string.Empty;
+
+    [Required]
+    [Compare(nameof(Password))]
+    public string ConfirmPassword { get; set; } = string.Empty;
 }

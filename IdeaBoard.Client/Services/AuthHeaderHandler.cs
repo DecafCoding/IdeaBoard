@@ -43,7 +43,7 @@ public class AuthHeaderHandler : DelegatingHandler
             {
                 // Use a new scope to get IAuthService (avoid circular dependency)
                 using var scope = _serviceProvider.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IdeaBoard.Features.Authentication.Services.IAuthService>();
+                var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
 
                 // Attempt token refresh
                 await authService.RefreshTokenAsync();

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace IdeaBoard.Features.Authentication.Models;
+namespace IdeaBoard.Shared.Models.Authentication;
 
 /// <summary>
 /// Response from Supabase Auth API for signup/login operations.
