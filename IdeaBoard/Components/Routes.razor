@@ -1,8 +1,25 @@
 ﻿<CascadingAuthenticationState>
     <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }">
         <Found Context="routeData">
-            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="routeData" Selector="h1" />
         </Found>
     </Router>
 </CascadingAuthenticationState>
+
+@code {
+    public class RedirectToLogin : ComponentBase
+    {
+        [Inject]
+        private NavigationManager Navigation { get; set; } = default!;
+
+        protected override void OnInitialized()
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+        }
+    }
+}
