@@ -145,9 +145,10 @@
         {
             _errorMessage = ex.Message;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            _errorMessage = "An unexpected error occurred. Please try again.";
+            // MVP: Show detailed error for debugging
+            _errorMessage = $"Error: {ex.GetType().Name}\n{ex.Message}\n{ex.InnerException?.Message}";
         }
         finally
         {
