@@ -15,8 +15,11 @@ public class BoardItemDataService : BaseDataService<BoardItemEntity>
     /// </summary>
     public async Task<List<BoardItemEntity>> GetByBoardIdAsync(Guid boardId)
     {
-        var filter = $"board_id=eq.{boardId}";
-        return await SupabaseService.GetAsync<BoardItemEntity>(TableName, filter);
+        var filters = new Dictionary<string, string>
+        {
+            ["board_id"] = $"eq.{boardId}"
+        };
+        return await SupabaseService.GetAsync<BoardItemEntity>(TableName, filters);
     }
 
     /// <summary>
