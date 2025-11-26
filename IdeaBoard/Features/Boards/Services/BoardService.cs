@@ -30,8 +30,11 @@ public class BoardService
         }
 
         // Query Supabase: GET /rest/v1/boards?user_id=eq.{userId}&order=updated_at.desc
-        var filter = $"user_id=eq.{userId}&order=updated_at.desc";
-        return await _supabaseService.GetAsync<Board>("boards", filter);
+        var filters = new Dictionary<string, string>
+        {
+            ["user_id"] = $"eq.{userId}"
+        };
+        return await _supabaseService.GetAsync<Board>("boards", filters, orderBy: "updated_at.desc");
     }
 
     // TODO: Implement remaining CRUD methods (Stories B3.2-B3.4)
