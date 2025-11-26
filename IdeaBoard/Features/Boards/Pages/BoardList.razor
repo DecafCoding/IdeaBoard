@@ -1,6 +1,7 @@
 @page "/boards"
 @using IdeaBoard.Features.Boards.Models
 @using IdeaBoard.Features.Boards.Services
+@using IdeaBoard.Features.Boards.Components
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject BoardService BoardService
@@ -11,7 +12,7 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>My Boards</h2>
-        <button class="btn btn-primary" disabled>
+        <button class="btn btn-primary" @onclick="ShowCreateModal">
             <i class="bi bi-plus-circle me-2"></i>Create New Board
         </button>
     </div>
@@ -62,10 +63,17 @@
     }
 </div>
 
+@* Create Board Modal *@
+<CreateBoardModal
+    IsVisible="_showCreateModal"
+    OnBoardCreated="HandleBoardCreated"
+    OnCancel="HandleModalCancel" />
+
 @code {
     private List<Board>? _boards;
     private bool _loading = true;
     private string? _error;
+    private bool _showCreateModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +101,22 @@
         {
             _loading = false;
         }
+    }
+
+    private void ShowCreateModal()
+    {
+        _showCreateModal = true;
+    }
+
+    private void HandleModalCancel()
+    {
+        _showCreateModal = false;
+    }
+
+    private void HandleBoardCreated(Guid boardId)
+    {
+        _showCreateModal = false;
+        Navigation.NavigateTo($"/board/{boardId}");
     }
 
     private void NavigateToBoard(Guid boardId)

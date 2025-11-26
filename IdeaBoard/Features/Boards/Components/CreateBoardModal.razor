@@ -1,0 +1,145 @@
+@using IdeaBoard.Features.Boards.Services
+@inject BoardService BoardService
+
+@* Bootstrap 5 Modal *@
+<div class="modal @(_isVisible ? "show d-block" : "")" tabindex="-1" style="@(_isVisible ? "background-color: rgba(0,0,0,0.5);" : "")">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Board</h5>
+                <button type="button" class="btn-close" @onclick="HandleCancel" disabled="@_isCreating" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@_errorMessage
+                    </div>
+                }
+
+                <form @onsubmit="HandleSubmit">
+                    <div class="mb-3">
+                        <label for="boardName" class="form-label">Board Name</label>
+                        <input
+                            @ref="_nameInput"
+                            type="text"
+                            class="form-control @(_showValidation && string.IsNullOrWhiteSpace(_boardName) ? "is-invalid" : "")"
+                            id="boardName"
+                            @bind="_boardName"
+                            @bind:event="oninput"
+                            maxlength="100"
+                            disabled="@_isCreating"
+                            placeholder="Enter board name" />
+
+                        <div class="d-flex justify-content-between mt-1">
+                            @if (_showValidation && string.IsNullOrWhiteSpace(_boardName))
+                            {
+                                <small class="text-danger">Board name is required</small>
+                            }
+                            else
+                            {
+                                <small>&nbsp;</small>
+                            }
+                            <small class="text-muted">@(_boardName?.Length ?? 0)/100</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HandleCancel" disabled="@_isCreating">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="HandleSubmit" disabled="@_isCreating">
+                    @if (_isCreating)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Creating...</span>
+                    }
+                    else
+                    {
+                        <span><i class="bi bi-plus-circle me-2"></i>Create Board</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ElementReference _nameInput;
+    private string _boardName = string.Empty;
+    private bool _isCreating = false;
+    private bool _showValidation = false;
+    private string? _errorMessage = null;
+    private bool _isVisible = false;
+
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnBoardCreated { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // When modal becomes visible, reset state and focus input
+        if (IsVisible && !_isVisible)
+        {
+            _isVisible = true;
+            _boardName = string.Empty;
+            _showValidation = false;
+            _errorMessage = null;
+            _isCreating = false;
+
+            // Focus the input field after render
+            await Task.Delay(100); // Small delay to ensure modal is rendered
+            await _nameInput.FocusAsync();
+        }
+        else if (!IsVisible)
+        {
+            _isVisible = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _showValidation = true;
+
+        // Validate name
+        if (string.IsNullOrWhiteSpace(_boardName))
+        {
+            return;
+        }
+
+        _isCreating = true;
+        _errorMessage = null;
+
+        try
+        {
+            var createdBoard = await BoardService.CreateBoardAsync(_boardName.Trim());
+            await OnBoardCreated.InvokeAsync(createdBoard.Id);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to create board: {ex.Message}";
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        if (!_isCreating)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+}
