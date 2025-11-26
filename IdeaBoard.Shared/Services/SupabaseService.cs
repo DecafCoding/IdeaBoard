@@ -18,15 +18,6 @@ public class SupabaseService
     {
         _httpClient = supabaseHttpClient.Client;
 
-        // Configure for Supabase REST API
-        _httpClient.BaseAddress = new Uri($"{supabaseHttpClient.SupabaseUrl}/rest/v1/");
-
-        // Add Prefer header for returning data after mutations
-        if (!_httpClient.DefaultRequestHeaders.Contains("Prefer"))
-        {
-            _httpClient.DefaultRequestHeaders.Add("Prefer", "return=representation");
-        }
-
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -53,7 +44,7 @@ public class SupabaseService
     /// </summary>
     public async Task<List<T>> GetAsync<T>(string table, string? filter = null)
     {
-        var url = string.IsNullOrEmpty(filter) ? table : $"{table}?{filter}";
+        var url = string.IsNullOrEmpty(filter) ? $"rest/v1/{table}" : $"rest/v1/{table}?{filter}";
         var response = await _httpClient.GetAsync(url);
 
         if (!response.IsSuccessStatusCode)
@@ -70,7 +61,7 @@ public class SupabaseService
     /// </summary>
     public async Task<T?> GetByIdAsync<T>(string table, Guid id) where T : class
     {
-        var response = await _httpClient.GetAsync($"{table}?id=eq.{id}");
+        var response = await _httpClient.GetAsync($"rest/v1/{table}?id=eq.{id}");
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -91,7 +82,13 @@ public class SupabaseService
     /// </summary>
     public async Task<T> PostAsync<T>(string table, T data) where T : class
     {
-        var response = await _httpClient.PostAsJsonAsync(table, data, _jsonOptions);
+        var request = new HttpRequestMessage(HttpMethod.Post, $"rest/v1/{table}")
+        {
+            Content = JsonContent.Create(data, options: _jsonOptions)
+        };
+        request.Headers.Add("Prefer", "return=representation");
+
+        var response = await _httpClient.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -108,7 +105,13 @@ public class SupabaseService
     /// </summary>
     public async Task<T> PatchAsync<T>(string table, Guid id, T data) where T : class
     {
-        var response = await _httpClient.PatchAsJsonAsync($"{table}?id=eq.{id}", data, _jsonOptions);
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"rest/v1/{table}?id=eq.{id}")
+        {
+            Content = JsonContent.Create(data, options: _jsonOptions)
+        };
+        request.Headers.Add("Prefer", "return=representation");
+
+        var response = await _httpClient.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -125,7 +128,7 @@ public class SupabaseService
     /// </summary>
     public async Task<bool> DeleteAsync(string table, Guid id)
     {
-        var response = await _httpClient.DeleteAsync($"{table}?id=eq.{id}");
+        var response = await _httpClient.DeleteAsync($"rest/v1/{table}?id=eq.{id}");
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -152,7 +155,7 @@ public class SupabaseService
         }
 
         // Create request message with upsert header
-        var request = new HttpRequestMessage(HttpMethod.Post, table)
+        var request = new HttpRequestMessage(HttpMethod.Post, $"rest/v1/{table}")
         {
             Content = JsonContent.Create(data, options: _jsonOptions)
         };
