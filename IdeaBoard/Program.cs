@@ -40,7 +40,8 @@ namespace IdeaBoard
             builder.Services.AddTransient<AuthHeaderHandler>();
             builder.Services.AddHttpClient<SupabaseHttpClient>()
                 .AddHttpMessageHandler<AuthHeaderHandler>();
-            builder.Services.AddSingleton<SupabaseHttpClient>();
+            // Note: AddHttpClient<T>() already registers T as transient
+            // We use scoped for SupabaseService to match per-request auth token management
 
             // Register Supabase Service as Scoped (per-request auth token management)
             builder.Services.AddScoped<SupabaseService>();

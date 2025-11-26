@@ -1,6 +1,7 @@
 using IdeaBoard.Shared.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace IdeaBoard.Features.Authentication.Services;
 
@@ -16,6 +17,7 @@ public class CookieTokenStorage : ITokenStorage
     private const string ExpirationCookieName = "auth_token_expiration";
 
     // In-memory fallback storage for Blazor Server Interactive mode
+    // Using a single global store with user ID as key for simplicity
     private static readonly ConcurrentDictionary<string, TokenData> _memoryStorage = new();
 
     private class TokenData
@@ -33,23 +35,33 @@ public class CookieTokenStorage : ITokenStorage
     private string GetSessionKey()
     {
         var context = _httpContextAccessor.HttpContext;
-        // Use connection ID or create a session identifier
-        // For Blazor Server, we can use the TraceIdentifier as a session key
-        return context?.TraceIdentifier ?? "default";
+
+        // For Blazor Server Interactive mode, use the authenticated user's ID as session key
+        // This persists across SignalR connections
+        if (context?.User?.Identity?.IsAuthenticated == true)
+        {
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                return $"user_{userId}";
+            }
+        }
+
+        // Last resort: use a connection-based identifier or default
+        return context?.Connection.Id ?? "default";
     }
 
     public Task<string?> GetAccessTokenAsync()
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return Task.FromResult<string?>(null);
 
-        // Try cookies first
-        if (context.Request.Cookies.TryGetValue(AccessTokenCookieName, out var token))
+        // Try cookies first (if HTTP context is available)
+        if (context != null && context.Request.Cookies.TryGetValue(AccessTokenCookieName, out var token))
         {
             return Task.FromResult<string?>(token);
         }
 
-        // Fallback to in-memory storage
+        // Fallback to in-memory storage using stable session key
         var sessionKey = GetSessionKey();
         if (_memoryStorage.TryGetValue(sessionKey, out var data))
         {
@@ -62,15 +74,14 @@ public class CookieTokenStorage : ITokenStorage
     public Task<string?> GetRefreshTokenAsync()
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return Task.FromResult<string?>(null);
 
-        // Try cookies first
-        if (context.Request.Cookies.TryGetValue(RefreshTokenCookieName, out var token))
+        // Try cookies first (if HTTP context is available)
+        if (context != null && context.Request.Cookies.TryGetValue(RefreshTokenCookieName, out var token))
         {
             return Task.FromResult<string?>(token);
         }
 
-        // Fallback to in-memory storage
+        // Fallback to in-memory storage using stable session key
         var sessionKey = GetSessionKey();
         if (_memoryStorage.TryGetValue(sessionKey, out var data))
         {
@@ -83,37 +94,9 @@ public class CookieTokenStorage : ITokenStorage
     public Task SetTokensAsync(string accessToken, string refreshToken, DateTime expiresAt)
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return Task.CompletedTask;
-
         var sessionKey = GetSessionKey();
 
-        // Check if the response has already started (e.g., in Blazor Server SignalR context)
-        // If headers have been sent, we cannot set cookies
-        if (context.Response.HasStarted)
-        {
-            // Fallback to in-memory storage for Blazor Server Interactive mode
-            _memoryStorage[sessionKey] = new TokenData
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresAt = expiresAt
-            };
-            return Task.CompletedTask;
-        }
-
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddDays(30) // Max cookie lifetime
-        };
-
-        context.Response.Cookies.Append(AccessTokenCookieName, accessToken, cookieOptions);
-        context.Response.Cookies.Append(RefreshTokenCookieName, refreshToken, cookieOptions);
-        context.Response.Cookies.Append(ExpirationCookieName, expiresAt.ToString("o"), cookieOptions);
-
-        // Also store in memory as backup
+        // Always store in memory for Blazor Server Interactive mode
         _memoryStorage[sessionKey] = new TokenData
         {
             AccessToken = accessToken,
@@ -121,21 +104,35 @@ public class CookieTokenStorage : ITokenStorage
             ExpiresAt = expiresAt
         };
 
+        // Also try to set cookies if context is available and response hasn't started
+        if (context != null && !context.Response.HasStarted)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(30) // Max cookie lifetime
+            };
+
+            context.Response.Cookies.Append(AccessTokenCookieName, accessToken, cookieOptions);
+            context.Response.Cookies.Append(RefreshTokenCookieName, refreshToken, cookieOptions);
+            context.Response.Cookies.Append(ExpirationCookieName, expiresAt.ToString("o"), cookieOptions);
+        }
+
         return Task.CompletedTask;
     }
 
     public Task ClearTokensAsync()
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return Task.CompletedTask;
-
         var sessionKey = GetSessionKey();
 
         // Clear in-memory storage
         _memoryStorage.TryRemove(sessionKey, out _);
 
-        // Clear cookies if response hasn't started
-        if (!context.Response.HasStarted)
+        // Clear cookies if context is available and response hasn't started
+        if (context != null && !context.Response.HasStarted)
         {
             context.Response.Cookies.Delete(AccessTokenCookieName);
             context.Response.Cookies.Delete(RefreshTokenCookieName);
@@ -148,10 +145,9 @@ public class CookieTokenStorage : ITokenStorage
     public Task<DateTime?> GetTokenExpirationAsync()
     {
         var context = _httpContextAccessor.HttpContext;
-        if (context == null) return Task.FromResult<DateTime?>(null);
 
-        // Try cookies first
-        if (context.Request.Cookies.TryGetValue(ExpirationCookieName, out var expirationStr))
+        // Try cookies first (if HTTP context is available)
+        if (context != null && context.Request.Cookies.TryGetValue(ExpirationCookieName, out var expirationStr))
         {
             if (DateTime.TryParse(expirationStr, out var expiration))
             {
@@ -159,7 +155,7 @@ public class CookieTokenStorage : ITokenStorage
             }
         }
 
-        // Fallback to in-memory storage
+        // Fallback to in-memory storage using stable session key
         var sessionKey = GetSessionKey();
         if (_memoryStorage.TryGetValue(sessionKey, out var data))
         {
