@@ -5,8 +5,11 @@ namespace IdeaBoard.Shared.DataEntities;
 [Table("board_items")]
 public class BoardItemEntity
 {
+    /// <summary>
+    /// Item ID. Null before saving to database (will be auto-generated).
+    /// </summary>
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
 
     [JsonPropertyName("board_id")]
     public Guid BoardId { get; set; }
@@ -29,9 +32,15 @@ public class BoardItemEntity
     [JsonPropertyName("metadata")]
     public string? Metadata { get; set; } // JSONB stored as string, nullable
 
+    /// <summary>
+    /// Created timestamp. Null before saving to database (will be auto-generated).
+    /// </summary>
     [JsonPropertyName("created_at")]
     public DateTime? CreatedAt { get; set; }
 
+    /// <summary>
+    /// Updated timestamp. Auto-updated by database trigger.
+    /// </summary>
     [JsonPropertyName("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 }

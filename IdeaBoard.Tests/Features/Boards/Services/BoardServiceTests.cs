@@ -54,7 +54,10 @@ public class BoardServiceTests
                 "boards",
                 It.Is<Board>(b =>
                     b.UserId == _testUserId &&
-                    b.Name == boardName)))
+                    b.Name == boardName &&
+                    !b.Id.HasValue &&           // Should not send ID (DB generates it)
+                    !b.CreatedAt.HasValue &&    // Should not send timestamp (DB generates it)
+                    !b.UpdatedAt.HasValue)))    // Should not send timestamp (DB generates it)
             .ReturnsAsync(expectedBoard);
 
         // Act
@@ -96,7 +99,10 @@ public class BoardServiceTests
                 "boards",
                 It.Is<Board>(b =>
                     b.UserId == _testUserId &&
-                    b.Name == trimmedName)))
+                    b.Name == trimmedName &&
+                    !b.Id.HasValue &&           // Should not send ID
+                    !b.CreatedAt.HasValue &&    // Should not send timestamp
+                    !b.UpdatedAt.HasValue)))    // Should not send timestamp
             .ReturnsAsync(expectedBoard);
 
         // Act
