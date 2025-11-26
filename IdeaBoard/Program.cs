@@ -1,5 +1,6 @@
 using IdeaBoard.Components;
 using IdeaBoard.Features.Authentication.Services;
+using IdeaBoard.Features.Boards.Services;
 using IdeaBoard.Services;
 using IdeaBoard.Services.Interfaces;
 using IdeaBoard.Shared.DataServices;
@@ -46,8 +47,7 @@ namespace IdeaBoard
 
             // Register other services (will be implemented in phases)
             builder.Services.AddScoped<NotificationService>();
-
-            // builder.Services.AddScoped<BoardService>();
+            builder.Services.AddScoped<BoardService>();
 
             // Register data services
             builder.Services.AddScoped<DataEntityMapper>();
