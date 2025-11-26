@@ -64,7 +64,7 @@ public abstract class BaseDataService<TEntity> where TEntity : class
         // Update timestamp
         SetTimestamps(entity, isNew: false);
 
-        return await SupabaseService.PatchAsync(TableName, id, entity);
+        return await SupabaseService.UpdateByIdAsync(TableName, id, entity);
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public abstract class BaseDataService<TEntity> where TEntity : class
     /// </summary>
     public virtual async Task<bool> DeleteAsync(Guid id)
     {
-        return await SupabaseService.DeleteAsync(TableName, id);
+        return await SupabaseService.DeleteByIdAsync(TableName, id);
     }
 
     /// <summary>

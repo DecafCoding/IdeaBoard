@@ -15,7 +15,10 @@ public class BoardDataService : BaseDataService<BoardEntity>
     /// </summary>
     public async Task<List<BoardEntity>> GetRecentAsync(int count = 10)
     {
-        var filter = $"order=updated_at.desc&limit={count}";
-        return await SupabaseService.GetAsync<BoardEntity>(TableName, filter);
+        return await SupabaseService.GetAsync<BoardEntity>(
+            TableName,
+            filters: null,
+            orderBy: "updated_at.desc",
+            limit: count);
     }
 }
