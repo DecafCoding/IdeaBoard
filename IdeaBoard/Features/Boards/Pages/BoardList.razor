@@ -119,14 +119,22 @@
         Navigation.NavigateTo($"/board/{boardId}");
     }
 
-    private void NavigateToBoard(Guid boardId)
+    private void NavigateToBoard(Guid? boardId)
     {
-        Navigation.NavigateTo($"/board/{boardId}");
+        if (boardId.HasValue)
+        {
+            Navigation.NavigateTo($"/board/{boardId.Value}");
+        }
     }
 
-    private string GetRelativeTime(DateTime dateTime)
+    private string GetRelativeTime(DateTime? dateTime)
     {
-        var timeSpan = DateTime.UtcNow - dateTime;
+        if (!dateTime.HasValue)
+        {
+            return "unknown";
+        }
+
+        var timeSpan = DateTime.UtcNow - dateTime.Value;
 
         if (timeSpan.TotalDays >= 365)
         {

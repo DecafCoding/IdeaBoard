@@ -119,7 +119,15 @@
         try
         {
             var createdBoard = await BoardService.CreateBoardAsync(_boardName.Trim());
-            await OnBoardCreated.InvokeAsync(createdBoard.Id);
+
+            if (createdBoard.Id.HasValue)
+            {
+                await OnBoardCreated.InvokeAsync(createdBoard.Id.Value);
+            }
+            else
+            {
+                _errorMessage = "Board was created but no ID was returned from the server.";
+            }
         }
         catch (UnauthorizedAccessException ex)
         {
