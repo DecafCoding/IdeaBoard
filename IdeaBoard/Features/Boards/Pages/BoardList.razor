@@ -116,14 +116,16 @@
     private void HandleBoardCreated(Guid boardId)
     {
         _showCreateModal = false;
-        Navigation.NavigateTo($"/board/{boardId}");
+        // Force full page reload to transition from InteractiveServer to InteractiveWebAssembly
+        Navigation.NavigateTo($"/board/{boardId}", forceLoad: true);
     }
 
     private void NavigateToBoard(Guid? boardId)
     {
         if (boardId.HasValue)
         {
-            Navigation.NavigateTo($"/board/{boardId.Value}");
+            // Force full page reload to transition from InteractiveServer to InteractiveWebAssembly
+            Navigation.NavigateTo($"/board/{boardId.Value}", forceLoad: true);
         }
     }
 
