@@ -62,7 +62,7 @@ public class DataEntityMapper
     {
         return new BoardItem
         {
-            Id = entity.Id,
+            Id = entity.Id ?? Guid.Empty,
             BoardId = entity.BoardId,
             UserId = entity.UserId,
             ItemType = entity.ItemType,
