@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using IdeaBoard.Shared.Services;
+using IdeaBoard.Shared.Services.Supabase;
 using IdeaBoard.Shared.DataServices;
 using IdeaBoard.Shared.Services.Authentication;
 using IdeaBoard.Client.Services;
@@ -23,12 +24,12 @@ namespace IdeaBoard.Client
             builder.Services.AddScoped<AuthSyncService>();
             builder.Services.AddAuthorizationCore();
 
-            // Add HTTP client for Supabase with AuthHeaderHandler
+            // Register Supabase HTTP Client with AuthHeaderHandler
             builder.Services.AddTransient<AuthHeaderHandler>();
-            builder.Services.AddHttpClient<SupabaseService>()
+            builder.Services.AddHttpClient<SupabaseHttpClient>()
                 .AddHttpMessageHandler<AuthHeaderHandler>();
 
-            // Register shared services
+            // Register Supabase Service
             builder.Services.AddScoped<SupabaseService>();
             builder.Services.AddScoped<NotificationService>();
 
