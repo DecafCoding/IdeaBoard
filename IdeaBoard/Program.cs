@@ -8,6 +8,7 @@ using IdeaBoard.Shared.Services;
 using IdeaBoard.Shared.Services.Authentication;
 using IdeaBoard.Shared.Services.Supabase;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Authentication;
 
 namespace IdeaBoard
 {
@@ -35,16 +36,13 @@ namespace IdeaBoard
             builder.Services.AddScoped<TokenRefreshService>();
             builder.Services.AddScoped<AuthSyncService>();
 
-            // Add authentication with cookie scheme
+            // Add authentication with custom JWT cookie handler
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = "Cookies";
+                options.DefaultScheme = "JwtCookie";
+                options.DefaultChallengeScheme = "JwtCookie";
             })
-            .AddCookie("Cookies", options =>
-            {
-                options.LoginPath = "/login";
-                options.LogoutPath = "/logout";
-            });
+            .AddScheme<AuthenticationSchemeOptions, JwtCookieAuthenticationHandler>("JwtCookie", options => { });
 
             builder.Services.AddAuthorizationCore();
 
