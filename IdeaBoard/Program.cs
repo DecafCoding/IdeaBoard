@@ -34,6 +34,18 @@ namespace IdeaBoard
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<TokenRefreshService>();
             builder.Services.AddScoped<AuthSyncService>();
+
+            // Add authentication with cookie scheme
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+            })
+            .AddCookie("Cookies", options =>
+            {
+                options.LoginPath = "/login";
+                options.LogoutPath = "/logout";
+            });
+
             builder.Services.AddAuthorizationCore();
 
             // Register Supabase HTTP Client with AuthHeaderHandler
@@ -78,6 +90,9 @@ namespace IdeaBoard
 
             app.UseStaticFiles();
             app.UseAntiforgery();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
