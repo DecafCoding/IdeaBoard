@@ -111,8 +111,8 @@
         {
             await AuthService.LoginAsync(_model, _rememberMe);
 
-            // Redirect to boards on success
-            Navigation.NavigateTo("/boards");
+            // Force a full page reload to ensure cookies are sent with the next request
+            Navigation.NavigateTo("/boards", forceLoad: true);
         }
         catch (AuthenticationException ex)
         {
